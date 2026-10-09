@@ -1,0 +1,228 @@
+# Technology fingerprints. A rule matches when any pattern matches.
+#   html:   case-sensitive substrings searched in the raw document
+#   src:    regular expressions matched against <script src> and <link href>
+#   meta:   meta name -> regular expression for its content
+#   header: response header -> regular expression for its value
+- name: WordPress
+  category: cms
+  html: ["/wp-content/", "/wp-includes/"]
+  meta: {generator: "(?i)^wordpress"}
+- name: Drupal
+  category: cms
+  html: ["Drupal.settings", "/sites/default/files/"]
+  meta: {generator: "(?i)^drupal"}
+  header: {x-generator: "(?i)drupal", x-drupal-cache: ".+"}
+- name: Joomla
+  category: cms
+  html: ["/media/jui/js/"]
+  meta: {generator: "(?i)joomla"}
+- name: TYPO3
+  category: cms
+  html: ["/typo3conf/", "/typo3temp/"]
+  meta: {generator: "(?i)typo3"}
+- name: Contentful
+  category: cms
+  html: ["images.ctfassets.net"]
+- name: Ghost
+  category: cms
+  meta: {generator: "(?i)^ghost"}
+- name: Webflow
+  category: site-builder
+  html: ["data-wf-site=", "assets.website-files.com"]
+  meta: {generator: "(?i)webflow"}
+- name: Wix
+  category: site-builder
+  html: ["static.wixstatic.com", "static.parastorage.com"]
+  meta: {generator: "(?i)wix\\.com"}
+  header: {x-wix-request-id: ".+"}
+- name: Squarespace
+  category: site-builder
+  html: ["static1.squarespace.com", "Static.SQUARESPACE_CONTEXT"]
+- name: Shopify
+  category: ecommerce
+  html: ["cdn.shopify.com", "Shopify.theme"]
+  header: {x-shopid: ".+", x-shopify-stage: ".+"}
+- name: WooCommerce
+  category: ecommerce
+  html: ["/wp-content/plugins/woocommerce/", "woocommerce-no-js"]
+  meta: {generator: "(?i)woocommerce"}
+- name: Magento
+  category: ecommerce
+  html: ["Mage.Cookies", "/static/version", "mage/cookies"]
+- name: BigCommerce
+  category: ecommerce
+  html: ["cdn11.bigcommerce.com"]
+- name: HubSpot
+  category: marketing-automation
+  src: ["js\\.hs-scripts\\.com", "js\\.hsforms\\.net", "js\\.hs-analytics\\.net", "hubspot\\.com/"]
+  html: ["hs-script-loader"]
+  meta: {generator: "(?i)hubspot"}
+- name: Marketo
+  category: marketing-automation
+  src: ["munchkin\\.marketo\\.net", "\\.marketo\\.com/"]
+  html: ["Munchkin.init"]
+- name: Pardot
+  category: marketing-automation
+  src: ["pi\\.pardot\\.com", "pardot\\.com/pd\\.js"]
+  html: ["piAId"]
+- name: Mailchimp
+  category: email-marketing
+  src: ["chimpstatic\\.com", "list-manage\\.com"]
+  html: ["list-manage.com/subscribe"]
+- name: Klaviyo
+  category: email-marketing
+  src: ["static\\.klaviyo\\.com"]
+- name: Salesforce
+  category: crm
+  html: ["webto.salesforce.com", "force.com/servlet"]
+  src: ["\\.salesforce\\.com/", "\\.force\\.com/"]
+- name: Intercom
+  category: live-chat
+  src: ["widget\\.intercom\\.io", "js\\.intercomcdn\\.com"]
+  html: ["intercomSettings"]
+- name: Drift
+  category: live-chat
+  src: ["js\\.driftt\\.com"]
+  html: ["drift.load("]
+- name: Zendesk
+  category: support
+  src: ["static\\.zdassets\\.com", "\\.zendesk\\.com/"]
+  html: ["zESettings"]
+- name: Crisp
+  category: live-chat
+  src: ["client\\.crisp\\.chat"]
+- name: Google Analytics
+  category: analytics
+  src: ["google-analytics\\.com/(analytics|ga)\\.js", "googletagmanager\\.com/gtag/js"]
+  html: ["GoogleAnalyticsObject", "gtag('config'"]
+- name: Google Tag Manager
+  category: tag-manager
+  src: ["googletagmanager\\.com/gtm\\.js"]
+  html: ["googletagmanager.com/ns.html", "googletagmanager.com/gtm.js"]
+- name: Segment
+  category: analytics
+  src: ["cdn\\.segment\\.(com|io)"]
+  html: ["analytics.load("]
+- name: Mixpanel
+  category: analytics
+  src: ["cdn\\.mxpnl\\.com"]
+  html: ["mixpanel.init("]
+- name: Hotjar
+  category: analytics
+  src: ["static\\.hotjar\\.com"]
+  html: ["_hjSettings"]
+- name: Plausible
+  category: analytics
+  src: ["plausible\\.io/js/"]
+- name: Matomo
+  category: analytics
+  src: ["matomo\\.js", "piwik\\.js"]
+  html: ["_paq.push"]
+- name: Meta Pixel
+  category: advertising
+  src: ["connect\\.facebook\\.net/.*/fbevents\\.js"]
+  html: ["fbq('init'"]
+- name: LinkedIn Insight
+  category: advertising
+  src: ["snap\\.licdn\\.com"]
+  html: ["_linkedin_partner_id"]
+- name: Stripe
+  category: payments
+  src: ["js\\.stripe\\.com"]
+- name: PayPal
+  category: payments
+  src: ["paypal\\.com/sdk/js", "paypalobjects\\.com"]
+- name: React
+  category: javascript-framework
+  html: ["data-reactroot", "__REACT_DEVTOOLS_GLOBAL_HOOK__"]
+  src: ["react(-dom)?(\\.production)?(\\.min)?\\.js"]
+- name: Next.js
+  category: javascript-framework
+  html: ["__NEXT_DATA__", "/_next/static/"]
+  header: {x-powered-by: "(?i)next\\.js"}
+- name: Vue.js
+  category: javascript-framework
+  html: ["data-v-app", "__VUE__"]
+  src: ["vue(\\.runtime)?(\\.global)?(\\.prod)?(\\.min)?\\.js"]
+- name: Nuxt
+  category: javascript-framework
+  html: ["__NUXT__", "/_nuxt/"]
+- name: Angular
+  category: javascript-framework
+  html: ["ng-version="]
+- name: Gatsby
+  category: javascript-framework
+  html: ["___gatsby"]
+  meta: {generator: "(?i)^gatsby"}
+- name: Svelte
+  category: javascript-framework
+  html: ["__sveltekit", "svelte-"]
+- name: jQuery
+  category: javascript-library
+  src: ["jquery[.-]?([0-9.]+)?(\\.slim)?(\\.min)?\\.js"]
+- name: Bootstrap
+  category: ui-framework
+  src: ["bootstrap(\\.bundle)?(\\.min)?\\.(js|css)"]
+- name: Tailwind CSS
+  category: ui-framework
+  src: ["tailwind(css)?(\\.min)?\\.css", "cdn\\.tailwindcss\\.com"]
+- name: Cloudflare
+  category: cdn
+  header: {server: "(?i)^cloudflare", cf-ray: ".+"}
+  html: ["/cdn-cgi/"]
+- name: Fastly
+  category: cdn
+  header: {x-served-by: "(?i)cache-", x-fastly-request-id: ".+"}
+- name: Amazon CloudFront
+  category: cdn
+  header: {x-amz-cf-id: ".+", via: "(?i)cloudfront"}
+- name: Vercel
+  category: hosting
+  header: {x-vercel-id: ".+", server: "(?i)^vercel"}
+- name: Netlify
+  category: hosting
+  header: {x-nf-request-id: ".+", server: "(?i)^netlify"}
+- name: Nginx
+  category: web-server
+  header: {server: "(?i)^nginx"}
+- name: Apache
+  category: web-server
+  header: {server: "(?i)^apache"}
+- name: PHP
+  category: language
+  header: {x-powered-by: "(?i)^php"}
+- name: ASP.NET
+  category: framework
+  header: {x-powered-by: "(?i)asp\\.net", x-aspnet-version: ".+"}
+  html: ["__VIEWSTATE"]
+- name: Express
+  category: framework
+  header: {x-powered-by: "(?i)^express"}
+- name: reCAPTCHA
+  category: security
+  src: ["google\\.com/recaptcha", "gstatic\\.com/recaptcha"]
+- name: Cookiebot
+  category: consent
+  src: ["consent\\.cookiebot\\.com"]
+- name: OneTrust
+  category: consent
+  src: ["cdn\\.cookielaw\\.org", "optanon"]
+- name: Calendly
+  category: scheduling
+  src: ["assets\\.calendly\\.com"]
+  html: ["calendly.com/"]
+- name: Typeform
+  category: forms
+  src: ["embed\\.typeform\\.com"]
+- name: Greenhouse
+  category: recruiting
+  html: ["boards.greenhouse.io"]
+- name: Lever
+  category: recruiting
+  html: ["jobs.lever.co"]
+- name: Workable
+  category: recruiting
+  html: ["apply.workable.com"]
+- name: Sentry
+  category: monitoring
+  src: ["browser\\.sentry-cdn\\.com", "sentry\\.io/"]

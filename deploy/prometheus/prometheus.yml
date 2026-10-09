@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # leadgraph started on the host with `make run` (metrics on :9108).
+  - job_name: leadgraph-host
+    static_configs:
+      - targets: ["host.docker.internal:9108"]
+  # leadgraph started with `docker compose --profile app up`.
+  - job_name: leadgraph
+    static_configs:
+      - targets: ["leadgraph:9108"]

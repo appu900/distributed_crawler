@@ -1,0 +1,7 @@
+/bin/
+/.env
+/seeds.txt
+/coverage.out
+*.test
+*.prof
+.DS_Store

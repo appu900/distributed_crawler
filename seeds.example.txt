@@ -1,0 +1,8 @@
+# One seed per line: a bare domain (https is assumed) or a full URL.
+# Lines starting with # are ignored. Copy to seeds.txt and edit.
+#
+# Only crawl sites you are allowed to crawl. The crawler obeys robots.txt,
+# identifies itself, and rate-limits per host, but the choice of targets and
+# the lawful basis for processing contact data are yours.
+example.com
+https://www.iana.org/

@@ -1,0 +1,112 @@
+# LeadGraph configuration. Every key is optional; the values below are the
+# defaults. Any key can be overridden with an environment variable named
+# LEADGRAPH_<SECTION>_<KEY>, e.g. LEADGRAPH_CRAWL_MAX_DEPTH=2 or
+# LEADGRAPH_FETCH_HEADLESS_ENABLED=true. Secrets (passwords, keys) have no
+# default and should come from the environment, not from this file.
+
+redis:
+  addr: localhost:6379
+  db: 0
+  tls: false                # true for hosted Redis (set username/password via env)
+  key_prefix: lg            # namespaces every key and stream
+
+neo4j:
+  uri: bolt://localhost:7687
+  username: neo4j
+  database: neo4j
+  # password: set LEADGRAPH_NEO4J_PASSWORD
+
+s3:
+  endpoint: localhost:9000
+  bucket: leadgraph
+  region: us-east-1
+  use_ssl: false
+  # access_key / secret_key: set LEADGRAPH_S3_ACCESS_KEY / LEADGRAPH_S3_SECRET_KEY
+
+crawl:
+  epoch: "1"                # change to recrawl everything
+  max_depth: 3
+  max_pages_per_domain: 40
+  default_delay: 1s         # between requests to one host
+  max_crawl_delay: 30s      # cap on robots.txt Crawl-delay
+  global_rps: 50            # across all processes
+  well_known_paths: [/about, /team, /contact, /people, /leadership, /company, /careers, /impressum]
+  max_queue_per_host: 2000
+  max_sitemap_urls: 500
+  max_sitemaps_per_domain: 5
+  host_lease: 3m            # how long a host stays reserved if a fetcher dies
+  dispatch_batch: 64
+  dispatch_interval: 100ms
+
+fetch:
+  bot_name: LeadGraphBot
+  bot_version: "1.0"
+  contact_url: https://example.com/bot   # put a page describing your crawler here
+  workers: 32
+  dial_timeout: 5s
+  tls_timeout: 5s
+  header_timeout: 10s
+  total_timeout: 30s
+  max_body_bytes: 5242880
+  max_redirects: 5
+  max_retries: 3            # in-request retries on 429/5xx/network errors
+  backoff_base: 500ms
+  backoff_max: 30s
+  robots_ttl: 24h
+  breaker_failures: 5       # consecutive failures before a host's breaker opens
+  breaker_cooldown: 1m
+  max_requeues: 3           # later re-attempts of a URL that kept failing
+  max_idle_conns_per_host: 2
+  allow_private_networks: false   # true only for tests and the local demo
+  host_overrides: {}        # host -> ip:port, for tests and the local demo
+  proxies: []               # http://host:port or socks5://host:port, rotated
+  parse_lag_threshold: 5000 # fetching pauses above this parse-stream backlog
+  headless:
+    enabled: false
+    workers: 2
+    timeout: 20s
+    min_text_bytes: 200     # render only pages with less visible text than this
+    exec_path: ""           # Chrome binary; empty = auto-detect
+
+extract:
+  default_region: ""        # ISO country for national phone numbers; empty = from ccTLD
+  fallback_region: US
+  allow_reserved_tlds: false
+  tech_rules_file: ""       # replaces the built-in technology rules
+
+parse:
+  workers: 8
+
+resolve:
+  workers: 4
+  person_similarity: 0.94   # Jaro-Winkler threshold for merging people
+  countries:
+    allow: []               # ISO alpha-2; empty = all
+    deny: []
+    unknown: allow          # for companies of unknown country when allow is set
+
+graph:
+  batch_rows: 1000          # rows per transaction (500-2000 is sensible)
+  batch_wait: 500ms
+  max_facts: 50
+  max_retries: 5
+
+queue:
+  max_len: 10000            # producers block at this stream backlog
+  claim_min_idle: 5m        # unacknowledged messages are taken over after this
+  max_deliveries: 5         # then the message goes to the DLQ
+  block: 2s
+  read_batch: 32
+  drain_timeout: 30s        # grace for in-flight work on shutdown
+
+store:
+  batch_records: 200
+  batch_bytes: 16777216
+  flush_interval: 2s
+
+telemetry:
+  metrics_addr: ":9108"     # /metrics, /healthz, /readyz; empty disables
+  otlp_endpoint: ""         # e.g. localhost:4318; empty disables tracing
+  service_name: leadgraph
+  log_level: info
+  log_format: json

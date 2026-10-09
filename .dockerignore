@@ -1,0 +1,9 @@
+.git
+.github
+.env
+.pulse
+bin
+docs
+deploy
+*.md
+**/testdata/fuzz

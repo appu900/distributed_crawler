@@ -1,0 +1,94 @@
+# Local infrastructure for LeadGraph. Credentials come from .env (see
+# .env.example); `make up` creates it on first run.
+name: leadgraph
+
+services:
+  redis:
+    # Redis 8 bundles the Bloom filter commands (BF.*) used for URL dedup.
+    image: redis:8
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1g
+      NEO4J_server_memory_pagecache_size: 512m
+    ports: ["7474:7474", "7687:7687"]
+    volumes: [neo4j-data:/data]
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$${NEO4J_AUTH#neo4j/}\" 'RETURN 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 40
+      start_period: 20s
+
+  minio:
+    # MinIO no longer publishes images on Docker Hub; Chainguard builds the
+    # open-source server. Any S3-compatible image works: set MINIO_IMAGE.
+    image: ${MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio-data:/data]
+    # The image has no shell or curl for a healthcheck; leadgraph waits for
+    # the S3 endpoint itself when it starts.
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d"]
+    ports: ["9090:9090"]
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/leadgraph.json
+    ports: ["3000:3000"]
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on: [prometheus]
+
+  # The crawler itself, containerised. Not started by `make up`; use
+  # `docker compose --profile app up -d` (stages can be scaled separately by
+  # copying this service with a different command: fetch, parse, resolve, write).
+  leadgraph:
+    profiles: ["app"]
+    build: .
+    command: ["run-all"]
+    environment:
+      LEADGRAPH_REDIS_ADDR: redis:6379
+      LEADGRAPH_NEO4J_URI: bolt://neo4j:7687
+      LEADGRAPH_NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      LEADGRAPH_S3_ENDPOINT: minio:9000
+      LEADGRAPH_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      LEADGRAPH_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      LEADGRAPH_FETCH_CONTACT_URL: ${LEADGRAPH_FETCH_CONTACT_URL:-https://example.com/bot}
+    ports: ["9108:9108"]
+    depends_on:
+      redis: {condition: service_healthy}
+      neo4j: {condition: service_healthy}
+      minio: {condition: service_started}
+
+volumes:
+  redis-data:
+  neo4j-data:
+  minio-data:
+  prometheus-data:
